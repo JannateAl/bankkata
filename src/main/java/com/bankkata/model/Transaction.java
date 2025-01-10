@@ -1,18 +1,19 @@
-package com.bankkata;
+package com.bankkata.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class Transaction {
 
     private final Operation operation;
-    private final double montant;
-    private final double balanceAfterOper;
+    private final BigDecimal amount;
+    private final BigDecimal balanceAfterOper;
     private final LocalDate date;
 
-    public Transaction(Operation operation, double montant, double balanceAfterOper) {
+    public Transaction(Operation operation, BigDecimal amount, BigDecimal balanceAfterOper) {
         this.operation = operation;
-        this.montant = montant;
+        this.amount = amount;
         this.balanceAfterOper = balanceAfterOper;
         this.date = LocalDate.now();
     }
@@ -20,7 +21,7 @@ public class Transaction {
     @Override
     public String toString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return operation + " | " + montant + " | " + balanceAfterOper  + " | " + date.format(formatter) ;
+        return operation + " | " + amount + " | " + balanceAfterOper  + " | " + date.format(formatter) ;
     }
     
 }

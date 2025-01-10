@@ -1,4 +1,4 @@
-package com.bankkata;
+package com.bankkata.model;
 
 public enum Operation {
     DEPOSIT, WITHDRAW

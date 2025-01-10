@@ -1,22 +1,26 @@
 package com.bankkata;
 
+import java.math.BigDecimal;
+
+import com.bankkata.service.BankAccountService;
+import com.bankkata.service.BankAccountServiceImpl;
+
 public class BankApp 
 {
     public static void main(String[] args) {
-        // Create un bank account avec un solde initial
-        BankAccount myAccount = new BankAccount("Alice", 150);
+        // Create bank account with initial balance
+        BankAccountService mybankService = new BankAccountServiceImpl("Alice", new BigDecimal("150"));
 
-        // Effectuer des opérations sur le compte
-        myAccount.deposit(300);
-        myAccount.withdraw(100);
-        myAccount.deposit(400);
-        myAccount.withdraw(200);
+        // Perform some operations
+        mybankService.deposit(new BigDecimal("300"));
+        mybankService.withdraw(new BigDecimal("100"));
+        mybankService.deposit(new BigDecimal("400"));
+        mybankService.withdraw(new BigDecimal("200"));
 
-        // Display le relevé complet
-        System.out.println("\n+++ Historique des transactions +++");
-        myAccount.printStatement();
+        // Display account statement
+        mybankService.printStatement();
 
-        // Display du solde final
-        System.out.println("\nSolde final : " + myAccount.getBalance() + " EUR");
+        // Display 
+        System.out.println("\nFinal balance : " + ((BankAccountServiceImpl) mybankService).getBankAccount().getBalance() + " EUR");
     }
 }
