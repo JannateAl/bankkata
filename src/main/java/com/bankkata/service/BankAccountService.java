@@ -6,6 +6,6 @@ public interface BankAccountService {
 
     void deposit(BigDecimal amount);
     void withdraw(BigDecimal amount);
-    void printStatement();
+    String printStatement();
 
 }

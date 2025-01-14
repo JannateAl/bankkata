@@ -34,14 +34,18 @@ public class BankAccountServiceImpl implements BankAccountService{
     }
 
     @Override
-    public void printStatement() {
-        System.out.println("-----------------------------------------");
-        System.out.println("\n+++ Account Statement for: " + bankAccount.getBankClient() + " +++");
-        System.out.println("-----------------------------------------");
-        System.out.println("OPERATION | MONTANT | BALANCE | DATE");
+    public String printStatement() {
+        StringBuilder statement = new StringBuilder();
+        statement.append("-----------------------------------------\n");
+        statement.append("\n+++ Account Statement for: " + bankAccount.getBankClient() + " +++\n");
+        statement.append("-----------------------------------------\n");
+        statement.append("OPERATION | MONTANT | BALANCE | DATE\n");
+        
         for (Transaction transaction : bankAccount.getTransactions()) {
-            System.out.println(transaction.toString());
+            statement.append(transaction.toString() + "\n");
         }
+        statement.append("\nFinal balance : " + bankAccount.getBalance() + " EUR");
+        return statement.toString();
     }
 
     public void validateAmount(BigDecimal amount) {
