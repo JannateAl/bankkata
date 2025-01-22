@@ -8,7 +8,7 @@ import com.bankkata.controller.BankAccountController;
 public class BankApp 
 {
     public static void main(String[] args) throws IOException {
-        BankAccountController controller = new BankAccountController("Alice", new BigDecimal("150"));
+        BankAccountController controller = new BankAccountController("Alice", new BigDecimal("150"), "Europe/Paris");
         controller.startServer();
     }
 

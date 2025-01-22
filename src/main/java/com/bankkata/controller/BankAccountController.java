@@ -2,92 +2,104 @@ package com.bankkata.controller;
 
 import com.bankkata.service.BankAccountService;
 import com.bankkata.service.BankAccountServiceImpl;
+import com.bankkata.utils.RequestParamExtractor;
+import com.bankkata.utils.ResponseHandler;
+import com.bankkata.view.SimpleTransactionFormatter;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
+
 
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
 
-    public BankAccountController(String client, BigDecimal initialAmount) {
-        // Crée un compte bancaire initial avec 1000 EUR pour un client 'John Doe'.
-        this.bankAccountService = new BankAccountServiceImpl(client, initialAmount);
+    public BankAccountController(String clientName, BigDecimal initialAmount, String clientZone) {
+        this.bankAccountService = new BankAccountServiceImpl(clientName, initialAmount, clientZone, new SimpleTransactionFormatter());
     }
 
+    // Starts the HTTP server to listen for client requests
     public void startServer() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+
+        HttpServer server = HttpServer.create(new InetSocketAddress(8081), 0);
         
-        // deposit endpoint
+        /**
+         * Handles deposit requests
+         * Expects a GET request with the request parameter "amount"
+         */
         server.createContext("/deposit", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
-                String response = handleTransaction(exchange, "deposit");
-                sendResponse(exchange, response);
+                if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    ResponseHandler.sendErrorResponse(exchange, 405, "Method Not Allowed");
+                    return;
+                }
+                
+                try {
+                    BigDecimal amount = RequestParamExtractor.extractAmount(exchange);
+                    bankAccountService.deposit(amount);
+                    ResponseHandler.sendResponse(exchange, 200, "Deposit was successful: " + amount + " EUR");
+                } catch (IllegalArgumentException e) {
+                    ResponseHandler.sendErrorResponse(exchange, 400, e.getMessage());
+                } catch (Exception e) {
+                    ResponseHandler.sendErrorResponse(exchange, 500, "Internal Server Error: " + e.getMessage());
+                }
             }
         });
 
-        // withdraw endpoint
+        /**
+         * Handles withdraw requests
+         * Expects a GET request with the request parameter "amount"
+         */
         server.createContext("/withdraw", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
-                String response = handleTransaction(exchange, "withdraw");
-                sendResponse(exchange, response);
+                if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    ResponseHandler.sendErrorResponse(exchange, 405, "Method Not Allowed");
+                    return;
+                }
+
+                try {
+                    BigDecimal amount = RequestParamExtractor.extractAmount(exchange);
+                    bankAccountService.withdraw(amount);
+                    ResponseHandler.sendResponse(exchange, 200, "Withdrawal was successful: " + amount + " EUR");
+                } catch (IllegalArgumentException e) {
+                    ResponseHandler.sendErrorResponse(exchange, 400, e.getMessage());
+                } catch (Exception e) {
+                    ResponseHandler.sendErrorResponse(exchange, 500, "Internal Server Error: " + e.getMessage());
+                }
             }
         });
 
-        // printing statement endpoint
+        /**
+         * Handles account statement requests
+         * Expects a GET request
+         */
         server.createContext("/statement", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
-                sendResponse(exchange, bankAccountService.printStatement());
+                if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    ResponseHandler.sendErrorResponse(exchange, 405, "Method Not Allowed");
+                    return;
+                }
+                
+                try {
+                    String statement = bankAccountService.printStatement();
+                    ResponseHandler.sendResponse(exchange, 200, statement);
+                } catch (Exception e) {
+                    ResponseHandler.sendErrorResponse(exchange, 500, "Internal Server Error: " + e.getMessage());
+                }
             }
         });
 
         server.setExecutor(null);
         server.start();
-        System.out.println("Server started on port 8080");
+        System.out.println("Server started on port 8081");
     }
 
-    //  Handles deposit or withdraw transaction 
-    private String handleTransaction(HttpExchange exchange, String operation) throws IOException {
-        String response = "";
-        try {
-            String query = exchange.getRequestURI().getQuery();
-            if (query != null && query.contains("amount=")) {
-                String amountStr = query.split("amount=")[1];
-                BigDecimal amount = new BigDecimal(amountStr);
-
-                if ("deposit".equals(operation)) {
-                    bankAccountService.deposit(amount);
-                    response = "Deposit of " + amount + " EUR was successful.";
-                } else if ("withdraw".equals(operation)) {
-                    bankAccountService.withdraw(amount);
-                    response = "Withdrawal of " + amount + " EUR was successful.";
-                }
-            } else {
-                response = "Amount parameter is missing.";
-            }
-        } catch (NumberFormatException e) {
-            response = "Error: Invalid amount format.";
-        } catch (Exception e) {
-            response = "Error: " + e.getMessage();
-        }
-        return response;
-    }
-
-    // Sends HTTP response
-    private void sendResponse(HttpExchange exchange, String response) throws IOException {
-        exchange.sendResponseHeaders(200, response.getBytes().length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes(StandardCharsets.UTF_8));
-        os.close();
-    }
 
 }
